@@ -13,9 +13,74 @@
   }
 }
 
+.button-row {
+  display: flex;
+  gap: 20px;          /* space between buttons */
+  justify-content: center;  /* center buttons horizontally */
+  margin-top: 20px;    /* space above the row */
+}
+
+button {
+  padding: 20px 50px;     /* more vertical and horizontal padding */
+  font-size: 1.5rem;      /* bigger text */
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #61dafb;
+  border: none;
+  border-radius: 8px;
+  color: black;
+  box-shadow: 0 4px 8px rgba(97, 218, 251, 0.5);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-blue {
+  background-color: #2196F3; /* blue */
+  color: white;
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.5);
+}
+
+.button-blue:hover {
+  background-color: #0b7dda;
+}
+
+.button-red {
+  background-color: #f44336; /* red */
+  color: white;
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.5);
+}
+
+.button-red:hover {
+  background-color: #d32f2f;
+}
+
+ul {
+  list-style: none;      /* Remove bullets */
+  padding: 0;
+}
+
+li {
+  margin-bottom: 20px;   /* Add space between teams */
+  font-size: 1.2em;
+}
+
+.vote-button {
+  background-color: #4caf50;  /* Green */
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.vote-button:hover {
+  background-color: #45a049;
+}
+
 .App-header {
   background-color: #282c34;
-  min-height: 100vh;
+  padding: 20px;
+  /* min-height: 100vh; */
   display: flex;
   flex-direction: column;
   align-items: center;
