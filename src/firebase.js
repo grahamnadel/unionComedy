@@ -7,6 +7,7 @@ import {
   updateDoc,
   increment,
 } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
 
 // Your Firebase config object
 const firebaseConfig = {
@@ -22,6 +23,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 // Export the needed Firestore functions and db instance
-export { db, collection, getDocs, doc, updateDoc, increment };
+export { db, collection, getDocs, doc, updateDoc, increment, auth, onAuthStateChanged, signInAnonymously };

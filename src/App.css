@@ -77,6 +77,14 @@ li {
   background-color: #45a049;
 }
 
+.voted-button {
+  background-color: #4caf50; /* green */
+  color: white;
+  font-weight: bold;
+  border: 2px solid #388e3c;
+}
+
+
 .App-header {
   background-color: #282c34;
   padding: 20px;

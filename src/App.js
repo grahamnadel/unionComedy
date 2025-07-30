@@ -1,12 +1,10 @@
 import TeamList from './teamList';
 import './firebase';
 import './App.css';
+import QRCodeFooter from "./qrCode";
+
 
 function App() {
-  const handleClick = (buttonName) => {
-    alert(`${buttonName} clicked`);
-  };
-
   return (
     <div className="App">
       <header className="App-header">
@@ -16,6 +14,7 @@ function App() {
 
       <main>
         <TeamList />
+        <QRCodeFooter />
       </main>
     </div>
   );
