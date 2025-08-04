@@ -1,15 +1,24 @@
+// TODO:
+/* 
+- many fast clicks will vote multiple times for a team
+- not resetting previous votes from phone
+*/
+
 import React, { useContext, useEffect, useState } from "react";
-import { db, collection, getDocs, doc, updateDoc, increment } from "./firebase";
-import { getDoc } from "firebase/firestore";
+import { db } from "./firebase";
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  updateDoc,
+  setDoc,
+  deleteDoc,
+  increment,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import { AuthContext } from "./AuthProvider";
-import { arrayUnion, arrayRemove } from "firebase/firestore";  // Add this import
-
-
-const getVotedTeam = () => localStorage.getItem("votedTeam");
-const setVotedTeam = (teamId) => localStorage.setItem("votedTeam", teamId);
-const setVoteTimestamp = (timestamp) => localStorage.setItem("voteTimestamp", timestamp.toString());
-const getVoteTimestamp = () => parseInt(localStorage.getItem("voteTimestamp"), 10) || 0;
-
 
 
 async function fetchResetTimestamp() {
@@ -21,7 +30,6 @@ async function fetchResetTimestamp() {
     const resetAt = data.resetAt;
 
     if (resetAt && resetAt.toMillis) {
-      // Firestore Timestamp → milliseconds since epoch
       return resetAt.toMillis();
     }
   }
@@ -30,30 +38,12 @@ async function fetchResetTimestamp() {
   return 0;
 }
 
-
 function TeamList() {
   const [teams, setTeams] = useState([]);
-  const [votedTeamId, setVotedTeamId] = useState(getVotedTeam())
+  const [votedTeamId, setVotedTeamId] = useState(null);
   const user = useContext(AuthContext);
 
-  useEffect(() => {
-    async function checkReset() {
-      const resetTimestamp = await fetchResetTimestamp();
-      const voteTimestamp = getVoteTimestamp();
-  
-      if (resetTimestamp > voteTimestamp) {
-        // Reset happened after user voted, clear vote info
-        setVotedTeam(null); // Clears localStorage
-        localStorage.removeItem("votedTeam");
-        localStorage.removeItem("voteTimestamp");
-        setVotedTeamId(null); // <-- Also clear React state
-      }
-    }
-  
-    checkReset();
-  }, []);
-  
-  
+  // Fetch teams on mount
   useEffect(() => {
     async function fetchTeams() {
       const teamsCol = collection(db, "teams");
@@ -68,67 +58,97 @@ function TeamList() {
     fetchTeams();
   }, []);
 
-  // Voting function: increments vote count in Firestore
-  // inside handleVote
+  // Fetch vote from Firestore
+  useEffect(() => {
+    async function fetchVotedTeam() {
+      if (!user) return;
+
+      const voteDocRef = doc(db, "votes", user.uid);
+      const voteDocSnap = await getDoc(voteDocRef);
+      const resetTimestamp = await fetchResetTimestamp();
+
+      if (voteDocSnap.exists()) {
+        const data = voteDocSnap.data();
+        const voteTime = data.timestamp?.toMillis?.() || 0;
+
+        if (voteTime > resetTimestamp) {
+          setVotedTeamId(data.teamId);
+        } else {
+          setVotedTeamId(null);
+          await deleteDoc(voteDocRef);
+        }
+      } else {
+        setVotedTeamId(null);
+      }
+    }
+
+    fetchVotedTeam();
+  }, [user]);
+
   const handleVote = async (teamId) => {
-    const previousVote = getVotedTeam();
-    const now = Date.now();
-    setVoteTimestamp(now);
-  
-    // If user votes for the same team again, do nothing
-    if (previousVote === teamId) {
-      alert("You've already voted for this team.");
+    if (!user) {
+      console.error("User not logged in");
+      alert("user isn't logged in")
       return;
     }
-  
-    try {
-      if (previousVote) {
-        const oldTeamRef = doc(db, "teams", previousVote);
-        
-        // Fetch latest voters array from Firestore
-        const oldTeamSnap = await getDoc(oldTeamRef);
-        const oldTeamData = oldTeamSnap.data();
-  
-        if (oldTeamData?.voters?.includes(user.uid)) {
-          // Only decrement if user's uid is still present in voters array
-          await updateDoc(oldTeamRef, {
-            votes: increment(-1),
-            voters: arrayRemove(user.uid),
-          });
-        }
-        // else: user not found in voters list, no decrement needed
-      }
-  
-      // Increment new vote and add user uid to voters
-      const newTeamRef = doc(db, "teams", teamId);
-      await updateDoc(newTeamRef, {
-        votes: increment(1),
-        voters: arrayUnion(user.uid),
-      });
-  
-      // Save new vote locally
-      setVotedTeam(teamId);
-      setVotedTeamId(teamId);
-  
-    } catch (error) {
-      console.error("Error updating votes: ", error);
-    }
-  };
-  
 
+    alert("User is voting: " + user.uid);
+
+    const voteDocRef = doc(db, "votes", user.uid);
+    const currentVoteSnap = await getDoc(voteDocRef);
+    const resetTimestamp = await fetchResetTimestamp();
+    const now = Date.now();
+
+    if (currentVoteSnap.exists()) {
+      const currentVote = currentVoteSnap.data();
+      const voteTime = currentVote.timestamp?.toMillis?.() || 0;
+
+      if (voteTime > resetTimestamp && currentVote.teamId === teamId) {
+        alert("You've already voted for this team.");
+        return;
+      }
+
+      // Decrement previous team vote
+      const oldTeamRef = doc(db, "teams", currentVote.teamId);
+      await updateDoc(oldTeamRef, {
+        votes: increment(-1),
+        voters: arrayRemove(user.uid),
+      });
+    }
+
+    // Increment new team vote
+    const newTeamRef = doc(db, "teams", teamId);
+    await updateDoc(newTeamRef, {
+      votes: increment(1),
+      voters: arrayUnion(user.uid),
+    });
+
+    // Write vote doc
+    await updateDoc(voteDocRef, {
+      teamId,
+      timestamp: new Date(),
+    }).catch(async () => {
+      await setDoc(voteDocRef, {
+        teamId,
+        timestamp: new Date(),
+      });
+    });
+
+    setVotedTeamId(teamId);
+  };
 
   return (
     <div>
       <h2>Vote for a Team!</h2>
       <ul>
-        {teams.map(team => (
+        {teams.map((team) => (
           <li key={team.id}>
-            <button 
-            onClick={() => handleVote(team.id)}
-            className={team.id === votedTeamId ? "voted-button" : ""}
+            <button
+              onClick={() => handleVote(team.id)}
+              className={team.id === votedTeamId ? "voted-button" : ""}
             >
               {team.name}
-              </button>
+            </button>
           </li>
         ))}
       </ul>

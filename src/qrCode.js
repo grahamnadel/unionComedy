@@ -3,7 +3,8 @@ import { QRCodeCanvas } from "qrcode.react"; // ✅ Correct for latest version
 
 
 function QRCodeDisplay() {
-  const appUrl = "https://yourdomain.com"; // Change this to your deployed URL
+  // const appUrl = "https://unioncomedy-2d46f.web.app/"; // Change this to your deployed URL
+  const appUrl = "unioncomedy-2d46f.firebaseapp.com"
 
   return (
     <div>
