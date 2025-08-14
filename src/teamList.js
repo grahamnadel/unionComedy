@@ -1,7 +1,7 @@
 // TODO:
 /* 
 - many fast clicks will vote multiple times for a team
-- not resetting previous votes from phone
+- Add voting based on location
 */
 
 import React, { useContext, useEffect, useState } from "react";
