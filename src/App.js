@@ -26,6 +26,11 @@ function App() {
   };
   const handleDenied = () => setAllowedToVote(false);
 
+  // New function to handle the retry action
+  const handleRetry = () => {
+    setAllowedToVote(null); // Reset the state to force LocationCheck to render again
+  };
+
   // Use a useEffect to control the duration of the "Location Found" message
   useEffect(() => {
     if (locationFound) {
@@ -52,6 +57,13 @@ function App() {
             onAllowed={handleAllowed}
             onDenied={handleDenied}
           />
+        )}
+
+        {allowedToVote === false && (
+          <div className="location-denied-container">
+            <p>Sorry, you are not allowed to vote from your location.</p>
+            <button onClick={handleRetry}>Try Again</button>
+          </div>
         )}
 
         {/* Display this message if the user is denied access */}

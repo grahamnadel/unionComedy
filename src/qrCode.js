@@ -7,7 +7,7 @@ function QRCodeDisplay() {
 
   // If you’re testing on your phone, make sure REACT_APP_DEV_URL is the ngrok URL
   const appUrl = isDev
-    ? process.env.REACT_APP_DEV_URL || "https://568a2f86c7ed.ngrok-free.app" // your ngrok URL
+    ? process.env.REACT_APP_DEV_URL || "https://3117ce872c32.ngrok-free.app" // your ngrok URL
     : "https://unioncomedy-2d46f.web.app"; // deployed Firebase app
 
   return (
